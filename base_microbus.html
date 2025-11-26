@@ -1,0 +1,409 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+<meta charset="UTF-8" /> 
+     <title>Micro</title>
+     <style>
+     </style>
+</head>
+<body>
+<canvas id="myCanvas">
+    <!--El elemento HTML canvas se puede utilizar para dibujar gráficos a través de 
+        secuencias de comandos (por lo general JavaScript ).-->
+</canvas>
+<script type="importmap"> 
+    {
+        "imports":{
+            "three": "./js/three.module.js",
+            "three/OrbitControls": "./js/OrbitControls.js" 
+        }
+}
+</script>
+<script type="module"> 
+    //👉🏽 Mandar llamar a la librería
+    import * as THREE from 'three'; 
+    import {OrbitControls} from 'three/OrbitControls';
+    console.log(OrbitControls);
+    import * as CANNON from './js/cannon-es.js';
+    import CannonDebugger from './js/cannon-es-debugger.js'
+    import {RoundedBoxGeometry} from "./js/RoundedBoxGeometry.js"
+
+    //👉🏽 Renderer - Realiza una conexión entre el código y el canvas
+    var renderer = new THREE.WebGLRenderer({canvas: document.getElementById('myCanvas'),antialias: true});
+    renderer.setPixelRatio(window.decivePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x034959);
+
+    //🎬 Creando nueva escena 
+    var scene = new THREE.Scene();
+
+    //🎥 Agregar una cámara de perspectiva
+    var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
+    scene.add(camera);
+
+    //👉🏽Settings de la cámara
+    camera.position.set(0, 4, 25);
+
+    //👉🏽Añadiendo los OrbitControls
+    var controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+//gridhelper
+var gridhelper= new THREE.GridHelper(40,30,4,2);
+//scene.add(gridhelper);
+var axesHelper=new THREE.AxesHelper(50);
+//scene.add(axesHelper);
+//AÑADIR EL MUNDO
+const world = new CANNON.World();
+world.gravity.set(0, -9.82, 0); // Gravedad usando cannon
+const cannonDebug = new CannonDebugger(scene, world); ///////// se genera un debugger que permite "ver" las aristas de las geometrias usadas en el cannon (un helper)
+
+var polarHelper=new THREE.PolarGridHelper(50,16,20,30);
+//scene.add(polarHelper) //cordenadas polares
+
+//CANON     PISO PROPIEDADES
+const groundBody = new CANNON.Body({ 
+type: CANNON.Body.STATIC,
+shape: new CANNON.Plane(),
+});
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);/// elplano aparece vertical, asíq ue hay que girarlo para que quede acostado
+groundBody.position.y=0;
+world.addBody(groundBody);//////////////////////////////////////// configuración del mundo cannon
+
+
+//luces
+var light = new THREE.PointLight(0x1BB3FF, 2.0, 200);
+light.castShadow = true;
+light.shadow.bias = 0.0001;
+light.shadow.mapSize.width = 2048 * 2;
+light.shadow.mapSize.height = 2048 * 2;
+light.position.set(60, 60, 10);
+var light2 = new THREE.AmbientLight(0xffffff, .3);
+scene.add(light, light2); //////////////////////////////// luces
+
+
+    // 🪄🪄 SECCIÓN DE CÓDIGO 🪄🪄
+    //BASE PARA REFERENCIA 
+// Cuerpo chasis
+var cuerpomic = new THREE.BoxGeometry(28, 3, 11.2); 
+var cuerpoMat = new THREE.MeshStandardMaterial({color: 0x058c45,side: THREE.DoubleSide});
+var cuerpo1 = new THREE.Mesh(cuerpomic, cuerpoMat);
+//scene.add(cuerpo1);
+cuerpo1.position.set(0, -4, 0);
+
+// defensa
+var cuerpomic = new THREE.BoxGeometry(29, 1, 11.5); 
+var cuerpoMat = new THREE.MeshStandardMaterial({color: 0x474b4e,side: THREE.DoubleSide});
+var cuerpo2 = new THREE.Mesh(cuerpomic, cuerpoMat);
+//scene.add(cuerpo2);
+cuerpo2.position.set(0, -5.5, 0);
+
+// Techo
+var techomic = new RoundedBoxGeometry(27, 1, 9, 5, 1); 
+var techoMat = new THREE.MeshStandardMaterial({color: 0xffffff,side: THREE.DoubleSide});
+// (ancho, alto, profundidad, segmentos, radio redondeo)
+var techo = new THREE.Mesh(techomic, techoMat);
+//scene.add(techo);
+techo.position.set(.5, 4.5, 0);
+
+// Cuerpoo frente gris
+var cuGeo = new THREE.CylinderGeometry(6, 7.8, 7, 4); 
+var cuMat = new THREE.MeshStandardMaterial({color: 0xffffff,side: THREE.DoubleSide});
+var cuer1 = new THREE.Mesh(cuGeo, cuMat);
+//scene.add(cuer1);
+cuer1.position.set(8.4,1, 0);
+cuer1.rotation.y = Math.PI / 4;
+// Cuerpoo frente verde
+var cuGeo = new THREE.CylinderGeometry(5.5, 8.1, 7, 4); 
+var cuMat = new THREE.MeshStandardMaterial({color: 0x058c45,side: THREE.DoubleSide});
+var cuer2 = new THREE.Mesh(cuGeo, cuMat);
+//scene.add(cuer2);
+cuer2.position.set(8.4,1, 0);
+cuer2.rotation.y = Math.PI / 4;
+
+// Cuerpoo medio
+var cuaGeo = new THREE.CylinderGeometry(6, 7.8, 7, 4); 
+var cuaMat = new THREE.MeshStandardMaterial({color: 0xffffff,side: THREE.DoubleSide});
+var acuer = new THREE.Mesh(cuaGeo, cuaMat);
+//scene.add(acuer);
+acuer.position.set(0,1, 0);
+acuer.rotation.y = Math.PI / 4;
+// Cuerpoo medio verde
+var cuaGeo = new THREE.CylinderGeometry(5.5, 8.1, 7, 4);  
+var cuaMat = new THREE.MeshStandardMaterial({color: 0x058c45,side: THREE.DoubleSide});
+var acuer1 = new THREE.Mesh(cuaGeo, cuaMat);
+//scene.add(acuer1);
+acuer1.position.set(0,1, 0);
+acuer1.rotation.y = Math.PI / 4;
+
+// Cuerpoo atras
+var cubGeo = new THREE.CylinderGeometry(6, 7.8, 7, 4); 
+var cubMat = new THREE.MeshStandardMaterial({color: 0xffffff,side: THREE.DoubleSide});
+var bcuer = new THREE.Mesh(cubGeo, cubMat);
+//scene.add(bcuer);
+bcuer.position.set(-8.4,1, 0);
+bcuer.rotation.y = Math.PI / 4;
+// Cuerpoo atras
+var cubGeo = new THREE.CylinderGeometry(5.5, 8.1, 7, 4);  
+var cubMat = new THREE.MeshStandardMaterial({color: 0x058c45,side: THREE.DoubleSide});
+var bcuer1 = new THREE.Mesh(cubGeo, cubMat);
+//scene.add(bcuer1);
+bcuer1.position.set(-8.4,1, 0);
+bcuer1.rotation.y = Math.PI / 4;
+
+// espejos
+var espGeo = new THREE.CylinderGeometry(6, 7, 7, 4); 
+var esdGeo = new THREE.CylinderGeometry(6.3, 7.2, 3, 4); 
+var puerGeo = new THREE.CylinderGeometry(2.3, 2.9, 4.5, 4); 
+var apuerGeo = new THREE.CylinderGeometry(1.8, 2.9, 8, 4); 
+var espMat = new THREE.MeshStandardMaterial({color: 0x000000,side: THREE.DoubleSide});
+var espfrente = new THREE.Mesh(espGeo, espMat);
+var espatras = new THREE.Mesh(espGeo, espMat);
+var esp1der = new THREE.Mesh(esdGeo, espMat);
+var esp2der = new THREE.Mesh(esdGeo, espMat);
+var pizq = new THREE.Mesh(puerGeo, espMat);
+var apizq = new THREE.Mesh(apuerGeo, espMat);
+//scene.add(espfrente);
+//scene.add(espatras);
+//scene.add(esp1der);
+//scene.add(esp2der);
+//scene.add(pizq);
+//scene.add(apizq);
+espfrente.position.set(8.9,1, 0);
+espatras.position.set(-8.7,1, 0);
+esp1der.position.set(7.5,2, 0);
+esp2der.position.set(-4,2, 0);
+pizq.position.set(11,-2, 3.8);
+apizq.position.set(-11,-0.5, 3.8);
+espfrente.rotation.y = Math.PI / 4;
+espatras.rotation.y = Math.PI / 4;
+esp1der.rotation.y = Math.PI / 4;
+esp2der.rotation.y = Math.PI / 4;
+pizq.rotation.y = Math.PI / 4;
+apizq.rotation.y = Math.PI / 4;
+
+// Ruedas
+var ruedaGeo = new THREE.CylinderGeometry(2, 2, 1.5, 32);
+var ruedaMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+var ruedadd = new THREE.Mesh(ruedaGeo, ruedaMat);
+var ruedadi = new THREE.Mesh(ruedaGeo,ruedaMat);
+var ruedaad = new THREE.Mesh(ruedaGeo,ruedaMat);
+var ruedaai = new THREE.Mesh(ruedaGeo,ruedaMat);
+ruedadd.rotation.x = Math.PI / 2;
+ruedadi.rotation.x = Math.PI / 2;
+ruedaad.rotation.x = Math.PI / 2;
+ruedaai.rotation.x = Math.PI / 2;
+ruedadd.position.set(7, -6, 5.2);
+ruedadi.position.set(7, -6, -5.2);
+ruedaad.position.set(-6, -6, 5.2);
+ruedaai.position.set(-6, -6, -5.2);
+//scene.add(ruedadd);
+//scene.add(ruedadi);
+//scene.add(ruedaad);
+//scene.add(ruedaai);
+
+// RINES
+var rinGeo = new THREE.CylinderGeometry(1, 1, 1.8, 32);
+var rinMat = new THREE.MeshStandardMaterial({ color: 0xcdcdcd });
+var rindd = new THREE.Mesh(rinGeo, rinMat);
+var rindi = new THREE.Mesh(rinGeo,rinMat);
+var rinad = new THREE.Mesh(rinGeo,rinMat);
+var rinai = new THREE.Mesh(rinGeo,rinMat);
+rindd.rotation.x = Math.PI / 2;
+rindi.rotation.x = Math.PI / 2;
+rinad.rotation.x = Math.PI / 2;
+rinai.rotation.x = Math.PI / 2;
+rindd.position.set(7, -6, 5.2);
+rindi.position.set(7, -6, -5.2);
+rinad.position.set(-6, -6, 5.2);
+rinai.position.set(-6, -6, -5.2);
+//scene.add(rindd);
+//scene.add(rindi);
+//scene.add(rinad);
+//scene.add(rinai);
+
+//CENTRO RINES
+var crinGeo = new THREE.CylinderGeometry(0.3, 0.3, 1.9, 32);
+var crinMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+var crindd = new THREE.Mesh(crinGeo,crinMat);
+var crindi = new THREE.Mesh(crinGeo,crinMat);
+var crinad = new THREE.Mesh(crinGeo,crinMat);
+var crinai = new THREE.Mesh(crinGeo,crinMat);
+crindd.rotation.x = Math.PI / 2;
+crindi.rotation.x = Math.PI / 2;
+crinad.rotation.x = Math.PI / 2;
+crinai.rotation.x = Math.PI / 2;
+crindd.position.set(10, -6, 4.5);
+crindi.position.set(10, -6, -4.5);
+crinad.position.set(-6, -6, 4.5);
+crinai.position.set(-6, -6, -4.5);
+//scene.add(crindd);
+//scene.add(crindi);
+//scene.add(crinad);
+//scene.add(crinai);
+
+//LETRERO
+var letr = new THREE.PlaneGeometry(1.5, 1);
+var letra = new THREE.PlaneGeometry(7, .8);
+var texx = new THREE.TextureLoader().load("./REF/letr.jpg");
+var texxa = new THREE.TextureLoader().load("./REF/letra.png");
+var texxa1 = new THREE.TextureLoader().load("./REF/pla.png");
+var letre = new THREE.MeshLambertMaterial({map:texx,side: THREE.DoubleSide});
+var letrea = new THREE.MeshLambertMaterial({map:texxa,side: THREE.DoubleSide});
+var plac = new THREE.MeshLambertMaterial({map:texxa1,side: THREE.DoubleSide});
+var letrero = new THREE.Mesh(letr, letre);
+var letreroa = new THREE.Mesh(letra, letrea);
+var placa = new THREE.Mesh(letr, plac);
+//scene.add(letrero);
+//scene.add(letreroa);
+//scene.add(placa);
+letrero.rotation.y = Math.PI / 2;
+letreroa.rotation.y = Math.PI / 2;
+placa.rotation.y = Math.PI / 2;
+letrero.position.set(13.8, 0, 3.5);
+letreroa.position.set(14, 4.5, 0);
+placa.position.set(-14.7, -5, 0);
+
+
+// focos
+var focos = new THREE.BoxGeometry(1.6, 1, 1.6); 
+var fbocos = new THREE.BoxGeometry(1.6, .5, 1.6); 
+var focoss = new THREE.BoxGeometry(1.6, 1, 1.6); 
+var fbocoss = new THREE.MeshLambertMaterial({color: 0xe3682c,side: THREE.DoubleSide});
+var fder = new THREE.Mesh(focos, focoss);
+var fizq = new THREE.Mesh(focos, focoss);
+var fbder = new THREE.Mesh(fbocos, fbocoss);
+var fbizq = new THREE.Mesh(fbocos, fbocoss);
+//scene.add(fder);
+//scene.add(fizq);
+//scene.add(fbder);
+//scene.add(fbizq);
+fder.position.set(13.4, -3, -4.4);
+fizq.position.set(13.4, -3, 4.4);
+fbder.position.set(13.4, -4, -4.4);
+fbizq.position.set(13.4, -4, 4.4);
+
+//LUCES FAROS FRENTE
+var lightf = new THREE.PointLight(0xe3682c, 1, 100);
+lightf.position.set(14, -3, -5.5);
+//scene.add(lightf);
+var lightf2 = new THREE.PointLight(0xe3682c, 1, 100);
+lightf2.position.set(14, -3, 5.5);
+//scene.add(lightf2);
+
+//LUCES FAROS Atras
+var lightf3 = new THREE.PointLight(0xe3682c, 1, 100);
+lightf3.position.set(-16, -3, -5.5);
+//scene.add(lightf3);
+var lightf4 = new THREE.PointLight(0xe3682c, 1, 100);
+lightf4.position.set(-16.5, -3, 5.5);
+//scene.add(lightf4);
+
+//CAJA PARA MEDIR
+var box = new THREE.BoxGeometry(23, 10, 23); 
+var caja = new THREE.MeshLambertMaterial({color: 0xffffff,side: THREE.DoubleSide});
+var cajaa = new THREE.Mesh(box, caja);
+//scene.add(cajaa);
+cajaa.position.set(0, 0 ,0);
+
+
+// focos traseros
+var f1 = new THREE.BoxGeometry(2, .8, .5); 
+var fa = new THREE.MeshLambertMaterial({color: 0xe3682c,side: THREE.DoubleSide});
+var fb = new THREE.MeshLambertMaterial({color: 0xef280f,side: THREE.DoubleSide});
+var fc = new THREE.MeshLambertMaterial({color: 0xcccccc,side: THREE.DoubleSide});
+var f12 = new THREE.Mesh(f1, fa);
+var f13 = new THREE.Mesh(f1, fb);
+var f1c = new THREE.Mesh(f1, fc);
+var fd1a = new THREE.Mesh(f1, fa);
+var fd1b = new THREE.Mesh(f1, fb);
+var fd1c = new THREE.Mesh(f1, fc);
+//scene.add(f12);
+//scene.add(f13);
+//scene.add(f1c);
+//scene.add(fd1a);
+//scene.add(fd1b);
+//scene.add(fd1c);
+f12.position.set(-13.1, -3.65, -4.6);
+f13.position.set(-13.1, -3.65, -4);
+f1c.position.set(-13.1, -3.65, -3.4);
+fd1a.position.set(-13.1, -3.65, 4.6);
+fd1b.position.set(-13.1, -3.65, 4);
+fd1c.position.set(-13.1, -3.65, 3.4);
+
+//AGRUPACION
+var carrito = new THREE.Group();
+carrito.add(cuerpo1,cuerpo2,techo,cuer1, cuer2,acuer, acuer1,bcuer, bcuer1,espfrente, 
+espatras, esp1der, esp2der, pizq, apizq,ruedadd, ruedadi, ruedaad, ruedaai,rindd, 
+rindi, rinad, rinai,crindd, crindi, crinad, crinai,letrero, letreroa,fder, fizq, 
+fbder, fbizq,f12, f13, f1c, fd1a, fd1b, fd1c, placa,lightf,lightf2,lightf3,lightf4);   
+
+scene.add(carrito);
+carrito.position.set(0,15,0);
+
+
+//RELOJ PARA LUCES
+var clock = new THREE.Clock();
+var velocidad = 3;
+var velocidadf = 4;
+var amplitud = 0.8;
+
+
+function carrito_movimiento_sin() {
+    carrito.position.y = Math.sin(clock.getElapsedTime() * velocidad) * amplitud;
+}
+ 
+function luces_focos() {
+
+    lightf.intensity = (Math.cos(clock.getElapsedTime() * velocidadf) * 0.5) + 0.5;
+    lightf2.intensity = (Math.cos(clock.getElapsedTime() * velocidadf) * 0.5) + 0.5;
+    lightf3.intensity = (Math.cos(clock.getElapsedTime() * velocidadf) * 0.5) + 0.5;
+    lightf4.intensity = (Math.cos(clock.getElapsedTime() * velocidadf) * 0.5) + 0.5;
+ 
+    //materialf.opacity = (Math.cos(clock.getElapsedTime() * velocidadf) * 0.5) + 1;
+}
+ 
+
+//canon masa al objeto
+const boxbody = new CANNON.Body({ 
+mass: 1,
+position:new CANNON.Vec3(0,20,0),
+shape: new CANNON.Box(new CANNON.Vec3(13,5,5))
+});
+boxbody.position.copy(carrito.position);
+world.addBody(boxbody); ///////////////// cuerpo "fisico" de la caja
+
+function aplicaFisicaAGrafico() {
+  carrito.position.copy(boxbody.position);
+  carrito.quaternion.copy(boxbody.quaternion);
+}//////////////////////////////////////////////////////aplicamos las propiedades fisicas a las geometrias 
+/////////////////////////////////////////////////////////////////////////Los cuaterniones en física representan
+// rotaciones en el espacio, véase cuaterniones y rotación en el espacio. Además tienen aplicaciones en el electromagnetismo y la mecánica cuántica. 
+//se utilizan a menudo en gráficos por computadora (y en el análisis geométrico asociado) para representar 
+// la orientación de un objeto en un espacio tridimensional. Las ventajas son: conforman una representación 
+// no singular (comparada con, por ejemplo, los ángulos de Euler), más compacta y más rápida que las matrices, 
+// en términos computacionales. Debido a lo expuesto, es común el uso de esta notación en el campo de la robótica, 
+// debido a que permite en ciertas situaciones, mediante cuaterniones unitarios, abstraer rotaciones y traslaciones 
+// con cierta simplicidad, permitiendo la obtención de la orientación relativa entre sistemas de coordenadas.
+
+
+      //🎰🎰Rendering y animación
+      requestAnimationFrame(render);
+      function render() {
+luces_focos();
+      //🪄🪄 Animación
+  //world.fixedStep();
+  aplicaFisicaAGrafico();
+  cannonDebug.update(); ///////////se actualiza la visualización del debugger
+
+world.step(1 / 60); // Actualizar el mundo físico
+      controls.update();
+
+      //Llamado para renderizar y volver a llamar a la misma función (render)
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+      }
+</script>
+</body>
+</html>
